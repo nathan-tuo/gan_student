@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torchinfo import summary
 
 
 # Feeding noise to Generator... input: (32, 100, 1, 1) output: (32, 3, 32, 32)
@@ -25,18 +26,47 @@ class Generator(nn.Module):
 class Discriminator(nn.Module):
     def __init__(self, out_features=3):
         super().__init__()
+        self.conv_layers = nn.Sequential(
+            nn.Conv2d(in_channels=3, out_channels=128, kernel_size=4, stride=2, padding=1),
+            nn.BatchNorm2d(128), 
+            nn.ReLU(),
+
+            nn.Conv2d(in_channels=128, out_channels=256, kernel_size=4, stride=2, padding=1),
+            nn.BatchNorm2d(256),  
+            nn.ReLU(),  # Activation function
+
+            nn.Conv2d(in_channels=256, out_channels=512, kernel_size=4, stride=2, padding=1),
+            nn.BatchNorm2d(512),
+            nn.ReLU(),
+
+            nn.Conv2d(in_channels=512, out_channels=1024, kernel_size=4, stride=2, padding=1),
+            nn.BatchNorm2d(1024),
+            nn.ReLU(),
+
+            nn.Conv2d(in_channels=1024, out_channels=1, kernel_size=4, stride=2, padding=1),
+        )
+
 
     def forward(self, x):
 
-        return
+        return self.conv_layers(x)
     
 
 
 if __name__ == "__main__":
 
-    model = Generator()
+    gen = Generator()
     noise = torch.randn(32, 100, 1, 1)
 
-    output = model(noise)
+    output = gen(noise)
     print(output.shape)
-    
+
+
+    disc = Discriminator()
+    image = torch.randn(32, 3, 32, 32)
+
+    output = disc(image)
+    print(output.shape)
+
+    summary(gen, input_size=(noise.shape))
+    summary(disc, input_size=(image.shape))
