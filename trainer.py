@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from torch.optim import Adam
-from models import ConditionalGenerator, ConditionalDiscriminator
+from gan_model import ConditionalGenerator, ConditionalDiscriminator
 from tqdm import tqdm 
 from torchvision.datasets import CIFAR10
 from torchvision.transforms import transforms

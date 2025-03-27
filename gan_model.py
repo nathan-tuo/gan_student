@@ -3,7 +3,6 @@ import torch.nn as nn
 from torchinfo import summary
 from huggingface_hub import PyTorchModelHubMixin
 
-# Conditional Generator - now takes class label as input
 class ConditionalGenerator(nn.Module, PyTorchModelHubMixin):
     def __init__(self, latent_dim=100, num_classes=10, d=128, out_channels=3):
         super().__init__()
@@ -13,6 +12,8 @@ class ConditionalGenerator(nn.Module, PyTorchModelHubMixin):
         
         # Linear layer to process noise + class embedding
         self.input_layer = nn.Linear(latent_dim + num_classes, d*8*4*4)
+
+        # reshape to (32, 1024, 4, 4)
         self.reshape_size = (-1, d*8, 4, 4)
         
         # Transposed convolution layers
@@ -35,30 +36,29 @@ class ConditionalGenerator(nn.Module, PyTorchModelHubMixin):
     def forward(self, noise, labels):
         # Process label embedding
         label_embedding = self.label_embedding(labels)
+        # print(f'label embed: {label_embedding.shape}')
         
-        # Concatenate noise and label embedding
+        # noise is [32, 100] + [32, 10]
         x = torch.cat([noise, label_embedding], dim=1)
         
-        # Process through input layer and reshape
         x = self.input_layer(x)
+        # print(x.shape)
         x = x.view(self.reshape_size)
-        
-        # Process through main layers
+        # print(x.shape)
+
         x = self.main(x)
         return x
 
-# Better Conditional Discriminator
 class ConditionalDiscriminator(nn.Module):
     def __init__(self, num_classes=10, d=64, in_channels=3):
         super().__init__()
         
-        # Initial convolution layer
         self.initial = nn.Sequential(
             nn.Conv2d(in_channels, d, 4, 2, 1),  # [batch, 64, 16, 16]
             nn.LeakyReLU(0.2, inplace=True)
         )
         
-        # Embedding and projection for class conditioning
+        # (num_embeddings, embedding_dim)
         self.embed = nn.Embedding(num_classes, d)
         
         # Main convolution layers
@@ -75,55 +75,45 @@ class ConditionalDiscriminator(nn.Module):
         )
         
     def forward(self, x, labels):
-        batch_size = x.size(0)
-        h = self.initial(x)
+        batch_size = x.size(0) # 32, but can be different
+        first_conv_out = self.initial(x) # Output shape (32, 64, 16, 16)
         
         # Get class embeddings and reshape to spatial feature maps
-        y_embedding = self.embed(labels)
-        y_embedding = y_embedding.view(batch_size, -1, 1, 1)
-        y_embedding = y_embedding.expand(batch_size, -1, h.size(2), h.size(3))
+        y_embedding = self.embed(labels) # Outputs (32, 64)
+
+        y_embedding = y_embedding.view(batch_size, -1, 1, 1) # Outputs (32, 64, 1, 1)
+        y_embedding = y_embedding.expand(batch_size, -1, first_conv_out.size(2), first_conv_out.size(3)) # Shape (32, 64, 16, 16)
         
         # Concatenate features and class embeddings
-        h = torch.cat([h, y_embedding], dim=1)
+        first_conv_out = torch.cat([first_conv_out, y_embedding], dim=1)
         
         # Process through main layers
-        h = self.main(h)
+        output = self.main(first_conv_out) # Outputs (32, 1, 1, 1)
         
         # Return logits, not sigmoid (for better numerical stability)
-        return h.view(batch_size, 1)
+        return output.view(batch_size, 1)
     
 
-if __name__ == "__main__":
-    import torch
-    from torchinfo import summary
-    
-    # Parameters
-    batch_size = 32
-    latent_dim = 100
-    num_classes = 10
-    
+if __name__ == "__main__":        
     # Testing Conditional Generator
-    gan = ConditionalGenerator(latent_dim=latent_dim, num_classes=num_classes)
+    gan = ConditionalGenerator(latent_dim=100, num_classes=10)
     
     # Note: Conditional generator takes noise vector and labels as separate inputs
-    noise = torch.randn(batch_size, latent_dim)  # Flattened noise, not 4D
-    labels = torch.randint(0, num_classes, (batch_size,))  # Random class labels
+    noise = torch.randn(32, 100)  # Flattened noise, not 4D
+    labels = torch.randint(0, 10, (32,))  # Random class labels
     
     # Generate images with the conditional generator
     output = gan(noise, labels)
     print("Generator output shape:", output.shape)  # Should be [32, 3, 32, 32]
 
     # Testing Conditional Discriminator
-    disc = ConditionalDiscriminator(num_classes=num_classes)
-    image = torch.randn(batch_size, 3, 32, 32)  # Random fake images
+    disc = ConditionalDiscriminator(num_classes=10)
+    image = torch.randn(32, 3, 32, 32)  # Random fake images
     
     # Discriminate images with conditional discriminator
     output = disc(image, labels)
     print("Discriminator output shape:", output.shape)  # Should be [32, 1, 1, 1]
 
-    # Print model summaries
-    print("\nGenerator Summary:")
-    summary(gan, input_data=[noise, labels])
+    # summary(gan, input_data=[noise, labels])
     
-    print("\nDiscriminator Summary:")
-    summary(disc, input_data=[image, labels])
+    # summary(disc, input_data=[image, labels])
