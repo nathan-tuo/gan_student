@@ -46,11 +46,11 @@ class Discriminator(nn.Module):
             nn.Conv2d(in_channels=1024, out_channels=1, kernel_size=4, stride=2, padding=1),
         )
 
+        self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
-
-        return self.conv_layers(x)
-    
+        x = self.conv_layers(x)
+        return self.sigmoid(x)
 
 
 if __name__ == "__main__":

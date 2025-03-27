@@ -1,5 +1,5 @@
 import torch
-from torch.nn import nn
+import torch.nn as nn
 from torch.utils.data import DataLoader
 from torch.optim import Adam
 from models import Generator, Discriminator
@@ -28,8 +28,8 @@ def trainer(generator, discriminator, train_dataloader, generator_optimizer, dis
             noise = torch.randn(batch_size, 100, 1, 1)
             fake_images = generator(noise)
 
-            output_fake = discriminator(fake_images)
-            disc_loss_fake = criterion(fake_labels, output_fake)
+            output_fake = discriminator(fake_images.detach())
+            disc_loss_fake = criterion(output_fake, fake_labels)
             disc_loss_fake.backward()
 
             total_disc_loss = disc_loss_real + disc_loss_fake
@@ -44,13 +44,13 @@ def trainer(generator, discriminator, train_dataloader, generator_optimizer, dis
 
             output_fake = discriminator(fake_images)
 
-            gen_loss = criterion(output_fake, output_fake)
+            gen_loss = criterion(output_fake, fake_labels)
 
             gen_loss.backward()
 
             generator_optimizer.step()
 
-            if epoch % 25 == 0:
+            if (epoch + 1) % 25 == 0:
                 print(f'[{epoch}/{epochs}] Loss_D: {total_disc_loss.item():.4f} Loss_G: {gen_loss.item():.4f}')
 
     if epoch % 10 == 0 or epoch == epochs - 1:
@@ -62,10 +62,10 @@ if __name__ == "__main__":
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    img_transform = transforms.Compose(
-        transforms.Resize(32, 32),
+    img_transform = transforms.Compose([
+        transforms.Resize((32, 32)),
         transforms.ToTensor(),
-    )
+    ])
 
     train_data = datasets.CIFAR10(  # Loads the CIFAR-10 training dataset
         root="./data/train",  # Directory where the dataset is stored
@@ -85,4 +85,4 @@ if __name__ == "__main__":
     discriminator_optimizer = Adam(discriminator.parameters(), lr=0.001)
 
     trainer(generator, discriminator, train_dataloader, generator_optimizer, discriminator_optimizer, 
-            batch_size=32, device=device, epochs=int)
+            batch_size=32, device=device, epochs=3)
