@@ -21,29 +21,29 @@ class ConditionalGenerator(nn.Module, PyTorchModelHubMixin):
             nn.BatchNorm2d(d*8),
             nn.ReLU(True),
             
-            nn.ConvTranspose2d(d*8, d*4, 4, 2, 1),  # [batch, 512, 8, 8]
-            nn.BatchNorm2d(d*4),
+            nn.ConvTranspose2d(d*8, ..., 4, 2, 1),  # [batch, 512, 8, 8]
+            nn.BatchNorm2d(...),
             nn.ReLU(True),
             
-            nn.ConvTranspose2d(d*4, d*2, 4, 2, 1),  # [batch, 256, 16, 16]
+            nn.ConvTranspose2d(..., ..., 4, 2, 1),  # [batch, 256, 16, 16]
             nn.BatchNorm2d(d*2),
             nn.ReLU(True),
             
-            nn.ConvTranspose2d(d*2, out_channels, 4, 2, 1),  # [batch, 3, 32, 32]
+            nn.ConvTranspose2d(d*2, ..., 4, 2, 1),  # [batch, 3, 32, 32]
             nn.Tanh()  # Output in range [-1, 1]
         )
         
     def forward(self, noise, labels):
         # Process label embedding
-        label_embedding = self.label_embedding(labels)
+        label_embedding = self.label_embedding(...)
         # print(f'label embed: {label_embedding.shape}')
         
         # noise is [32, 100] + [32, 10]
-        x = torch.cat([noise, label_embedding], dim=1)
+        x = torch.cat([...], dim=1)
         
-        x = self.input_layer(x)
+        x = self.input_layer(...)
         # print(x.shape)
-        x = x.view(self.reshape_size)
+        x = x.view(...)
         # print(x.shape)
 
         x = self.main(x)
@@ -63,11 +63,11 @@ class ConditionalDiscriminator(nn.Module):
         
         # Main convolution layers
         self.main = nn.Sequential(
-            nn.Conv2d(d + d, d*2, 4, 2, 1),  # [batch, 128, 8, 8]
-            nn.BatchNorm2d(d*2),
+            nn.Conv2d(d + d, ..., 4, 2, 1),  # [batch, 128, 8, 8]
+            nn.BatchNorm2d(...),
             nn.LeakyReLU(0.2, inplace=True),
             
-            nn.Conv2d(d*2, d*4, 4, 2, 1),  # [batch, 256, 4, 4]
+            nn.Conv2d(d*2, ..., 4, 2, 1),  # [batch, 256, 4, 4]
             nn.BatchNorm2d(d*4),
             nn.LeakyReLU(0.2, inplace=True),
             

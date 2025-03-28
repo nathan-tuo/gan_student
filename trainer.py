@@ -11,8 +11,8 @@ import os
 def train_cgan(generator, discriminator, train_loader, num_epochs, latent_dim, device):
     
     # Move models to device
-    generator = generator.to(device)
-    discriminator = discriminator.to(device)
+    generator = generator.to(...)
+    discriminator = discriminator.to(...)
     
     os.makedirs('checkpoints', exist_ok=True)
     os.makedirs('samples', exist_ok=True)
@@ -23,8 +23,8 @@ def train_cgan(generator, discriminator, train_loader, num_epochs, latent_dim, d
     
     # Training loop
     for epoch in range(num_epochs):
-        generator.train()
-        discriminator.train()
+        ....train()
+        ....train()
         
         total_d_loss = 0.0
         total_g_loss = 0.0
@@ -106,8 +106,8 @@ def train_cgan(generator, discriminator, train_loader, num_epochs, latent_dim, d
                       f"D_acc: {d_accuracy:.2f}")
         
         # Update learning rates
-        scheduler_g.step()
-        scheduler_d.step()
+        ....step()
+        ....step()
         
         # Calculate average epoch losses
         avg_d_loss = total_d_loss / batches_done
@@ -142,10 +142,10 @@ if __name__ == "__main__":
     batch_size = 64
     latent_dim = 100
     num_classes = 10
-    num_epochs = 100  # More epochs for better training
+    num_epochs = ...  # More epochs for better training
 
     # Set device
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("..." if torch.cuda.is_available() else "...")
     print(f"Using device: {device}")
 
     # Initialize models
