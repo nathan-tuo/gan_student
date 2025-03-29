@@ -1,3 +1,7 @@
+# Write your code for the following task underneath the comment lines! 
+#
+#
+#
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -10,18 +14,15 @@ import os
 
 def train_cgan(generator, discriminator, train_loader, num_epochs, latent_dim, device):
     
-    # Move models to device
     generator = generator.to(...)
     discriminator = discriminator.to(...)
     
     os.makedirs('checkpoints', exist_ok=True)
     os.makedirs('samples', exist_ok=True)
     
-    # For visualizing progress
     fixed_noise = torch.randn(100, latent_dim, device=device)
     fixed_labels = torch.tensor([i for i in range(10) for _ in range(10)], device=device)
     
-    # Training loop
     for epoch in range(num_epochs):
         ....train()
         ....train()
@@ -33,73 +34,66 @@ def train_cgan(generator, discriminator, train_loader, num_epochs, latent_dim, d
         for i, (real_images, labels) in enumerate(train_loader):
             batch_size = real_images.size(0)
             
-            # Get real and fake labels with label smoothing
-            real_labels = torch.ones(batch_size, 1, device=device) * 0.9  # Label smoothing
+            real_labels = torch.ones(batch_size, 1, device=device) * 0.9
             fake_labels = torch.zeros(batch_size, 1, device=device)
             
             # Move data to device
-            real_images = real_images.to(device)
-            labels = labels.to(device)
-            
+
+
             # -----------------------------------------
-            #  Train Discriminator (with label noise)
+            #  Create Train Discriminator (with label noise)
             # -----------------------------------------
-            optimizer_d.zero_grad()
+
+            # Use zero_grad() for optimizer
             
-            # Add random noise to labels (5% probability of flipping)
             real_labels_noise = real_labels - 0.1 * torch.rand(real_labels.size(), device=device)
             fake_labels_noise = fake_labels + 0.1 * torch.rand(fake_labels.size(), device=device)
             
             # Process real images (no detach needed for real images)
-            d_real = discriminator(real_images, labels)
-            loss_real = adversarial_loss(d_real, real_labels_noise)
+
             
             # Generate fake images
-            z = torch.randn(batch_size, latent_dim, device=device)
-            fake_images = generator(z, labels)
+
             
             # Process fake images
-            d_fake = discriminator(fake_images.detach(), labels)  # Detach to not train generator
-            loss_fake = adversarial_loss(d_fake, fake_labels_noise)
             
-            # Total discriminator loss
-            loss_d = (loss_real + loss_fake) / 2
             
+            # Calculate the total discriminator loss
+
+
             # Only update discriminator if it's not too strong
-            d_real_accuracy = (torch.sigmoid(d_real) > 0.5).float().mean().item()
-            d_fake_accuracy = (torch.sigmoid(d_fake) <= 0.5).float().mean().item()
-            d_accuracy = (d_real_accuracy + d_fake_accuracy) / 2
-            
-            # If discriminator is too accurate, skip update
-            if d_accuracy < 0.9:  # Allow discriminator to update only if it's not too good
-                loss_d.backward()
-                optimizer_d.step()
+
+
+            # If discriminator is too accurate, skip update. Allow discriminator to update only if it's not too good
+
             
             # -----------------------------------------
-            #  Train Generator (every other batch)
+            #  Create Train Generator (every other batch)
             # -----------------------------------------
-            if i % 2 == 0:  # Train generator less frequently
-                optimizer_g.zero_grad()
+
+            if i % 2 == 0:  
                 
+                # Use zero_grad() for optimizer
+                
+
                 # Generate new batch of fake images
-                z = torch.randn(batch_size, latent_dim, device=device)
-                fake_images = generator(z, labels)
+
                 
                 # Get discriminator predictions
-                d_fake = discriminator(fake_images, labels)
-                
+
+
                 # Generator wants discriminator to think its images are real
-                loss_g = adversarial_loss(d_fake, real_labels)
-                
+
+
                 # Update generator
-                loss_g.backward()
-                optimizer_g.step()
+
+                # You are done! Rest of the code in 4.trainer.py is complete!
+
             
             total_d_loss += loss_d.item()
             total_g_loss += loss_g.item()
             batches_done += 1
             
-            # Print statistics
             if i % 100 == 0:
                 print(f"Epoch [{epoch+1}/{num_epochs}], Batch [{i}/{len(train_loader)}], "
                       f"D_loss: {loss_d.item():.4f}, G_loss: {loss_g.item():.4f}, "

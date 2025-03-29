@@ -1,3 +1,7 @@
+# Write your code for the following task underneath the comment lines! 
+#
+#
+#
 import torch
 import torch.nn as nn
 from torchinfo import summary
@@ -8,43 +12,22 @@ class ConditionalGenerator(nn.Module, PyTorchModelHubMixin):
         super().__init__()
         
         # Embedding layer for class labels
-        self.label_embedding = nn.Embedding(num_classes, num_classes)
         
         # Linear layer to process noise + class embedding
-        self.input_layer = nn.Linear(latent_dim + num_classes, d*8*4*4)
 
         # reshape to (32, 1024, 4, 4)
-        self.reshape_size = (-1, d*8, 4, 4)
         
-        # Transposed convolution layers
-        self.main = nn.Sequential(
-            nn.BatchNorm2d(d*8),
-            nn.ReLU(True),
-            
-            nn.ConvTranspose2d(d*8, ..., 4, 2, 1),  # [batch, 512, 8, 8]
-            nn.BatchNorm2d(...),
-            nn.ReLU(True),
-            
-            nn.ConvTranspose2d(..., ..., 4, 2, 1),  # [batch, 256, 16, 16]
-            nn.BatchNorm2d(d*2),
-            nn.ReLU(True),
-            
-            nn.ConvTranspose2d(d*2, ..., 4, 2, 1),  # [batch, 3, 32, 32]
-            nn.Tanh()  # Output in range [-1, 1]
-        )
+        # Transposed convolution layers using Sequential
+        
         
     def forward(self, noise, labels):
-        # Process label embedding
-        label_embedding = self.label_embedding(...)
-        # print(f'label embed: {label_embedding.shape}')
         
-        # noise is [32, 100] + [32, 10]
+        # Process label embedding
+        
         x = torch.cat([...], dim=1)
         
         x = self.input_layer(...)
-        # print(x.shape)
         x = x.view(...)
-        # print(x.shape)
 
         x = self.main(x)
         return x
@@ -54,25 +37,20 @@ class ConditionalDiscriminator(nn.Module):
         super().__init__()
         
         self.initial = nn.Sequential(
-            nn.Conv2d(in_channels, d, 4, 2, 1),  # [batch, 64, 16, 16]
-            nn.LeakyReLU(0.2, inplace=True)
+
+            # Conv2d layer and a LeakyReLU layer
+
         )
         
-        # (num_embeddings, embedding_dim)
-        self.embed = nn.Embedding(num_classes, d)
-        
-        # Main convolution layers
+        # Embedding layer
+
+
+        # Main convolution layers using Sequential
         self.main = nn.Sequential(
-            nn.Conv2d(d + d, ..., 4, 2, 1),  # [batch, 128, 8, 8]
-            nn.BatchNorm2d(...),
-            nn.LeakyReLU(0.2, inplace=True),
-            
-            nn.Conv2d(d*2, ..., 4, 2, 1),  # [batch, 256, 4, 4]
-            nn.BatchNorm2d(d*4),
-            nn.LeakyReLU(0.2, inplace=True),
-            
-            nn.Conv2d(d*4, 1, 4, 1, 0)  # [batch, 1, 1, 1]
+
         )
+
+        # You are done! Rest of the code in 3.gan_model.py is complete!
         
     def forward(self, x, labels):
         batch_size = x.size(0) # 32, but can be different
@@ -92,7 +70,7 @@ class ConditionalDiscriminator(nn.Module):
         
         # Return logits, not sigmoid (for better numerical stability)
         return output.view(batch_size, 1)
-    
+
 
 if __name__ == "__main__":        
     # Testing Conditional Generator
