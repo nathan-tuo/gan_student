@@ -1,2 +1,30 @@
 data
 __pycache__
+
+*.ipynb
+*.pyc
+*.pth
+*.pt
+*.png
+*.jpg
+*.jpeg
+
+.env
+checkpoints/
+model_repo/
+downloaded_model/
+
+# Virtual environment
+venv/
+.venv/
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+
+
